@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SensorCloud — Industrial IoT Telemetry Dashboard &amp; Stream Broker</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="iot-shell">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="chip-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <line x1="9" y1="1" x2="9" y2="4"/>
+            <line x1="15" y1="1" x2="15" y2="4"/>
+            <line x1="9" y1="20" x2="9" y2="23"/>
+            <line x1="15" y1="20" x2="15" y2="23"/>
+            <line x1="20" y1="9" x2="23" y2="9"/>
+            <line x1="20" y1="14" x2="23" y2="14"/>
+            <line x1="1" y1="9" x2="4" y2="9"/>
+            <line x1="1" y1="14" x2="4" y2="14"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>SENSORCLOUD <span class="badge-iot">INDUSTRIAL TELEMETRY</span></h1>
+          <p class="brand-caption">ESP32 STREAM BROKER • THRESHOLD RULE ENGINE • ANOMALY DETECTION</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="broker-status">
+          <span class="live-pulse"></span>
+          <span id="sseStatus">TELEMETRY STREAM: CONNECTED</span>
+        </div>
+        <button id="refreshDataBtn" class="btn btn-secondary">Sync Fleet</button>
+      </div>
+    </header>
+
+    <!-- Metrics Ribbon -->
+    <section class="metrics-ribbon">
+      <div class="metric-card">
+        <span class="m-label">PROVISIONED NODES</span>
+        <span class="m-val text-cyan font-mono" id="statNodes">0</span>
+        <span class="m-sub">Active Hardware Nodes</span>
+      </div>
+      <div class="metric-card">
+        <span class="m-label">INGESTED DATA POINTS</span>
+        <span class="m-val text-emerald font-mono" id="statTelemetry">0</span>
+        <span class="m-sub">Lifetime Telemetry Readings</span>
+      </div>
+      <div class="metric-card">
+        <span class="m-label">ACTIVE THRESHOLD ALERTS</span>
+        <span class="m-val text-coral font-mono" id="statAlerts">0</span>
+        <span class="m-sub">Rule Condition Breaches</span>
+      </div>
+      <div class="metric-card">
+        <span class="m-label">FLEET HEALTH INDEX</span>
+        <span class="m-val text-gold font-mono" id="statHealth">100.0%</span>
+        <span class="m-sub">Nominal Telemetry Ratio</span>
+      </div>
+    </section>
+
+    <!-- Main Console Grid -->
+    <main class="console-body">
+      <!-- Left Column: Fleet Grid & Simulator -->
+      <section class="col-fleet">
+        <!-- Devices Panel -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Industrial Device Fleet</h2>
+              <span class="sub-caption">Edge microcontrollers, environmental nodes, and vibration sensors</span>
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="toggleProvisionModal()">+ Provision Node</button>
+          </div>
+
+          <!-- Provision Device Drawer -->
+          <div class="drawer hidden" id="provisionDrawer">
+            <form id="newDeviceForm" class="iot-form">
+              <div class="form-row">
+                <label>Node Name</label>
+                <input type="text" id="devName" placeholder="e.g. Chiller Condenser Vibration Node" required>
+              </div>
+              <div class="form-cols">
+                <div class="form-row">
+                  <label>Device Type</label>
+                  <select id="devType">
+                    <option value="ENVIRONMENTAL">ENVIRONMENTAL</option>
+                    <option value="VIBRATION">VIBRATION</option>
+                    <option value="AIR_QUALITY">AIR_QUALITY</option>
+                    <option value="POWER">POWER</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Hardware Model</label>
+                  <input type="text" id="devModel" placeholder="ESP32-S3-WROOM" value="ESP32-S3-WROOM" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>Deployment Location</label>
+                <input type="text" id="devLocation" placeholder="e.g. Utility Annex Bay 4" required>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="toggleProvisionModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Provision Device</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="devices-grid" id="devicesContainer">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Simulator Controls -->
+        <div class="panel" style="margin-top: 1.5rem;">
+          <div class="panel-head">
+            <div>
+              <h2>Virtual Hardware Telemetry Simulator</h2>
+              <span class="sub-caption">Generate realistic telemetry readings or inject threshold anomalies</span>
+            </div>
+          </div>
+
+          <div class="simulator-controls">
+            <button id="simTickBtn" class="btn btn-primary">Trigger Telemetry Sweep</button>
+            <button id="simOverheatBtn" class="btn btn-coral">Inject High-Temp Anomaly (42.5°C)</button>
+            <button id="simAutoBtn" class="btn btn-secondary">Start Auto-Stream (3s Interval)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Live Stream & Alert Feed -->
+      <section class="col-stream">
+        <!-- Live Telemetry Stream -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Live Telemetry Stream</h3>
+              <span class="sub-caption">Ingested real-time sensor measurements</span>
+            </div>
+          </div>
+
+          <div class="stream-scroll" id="telemetryStream">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Alert Events Feed -->
+        <div class="panel" style="margin-top: 1.5rem;">
+          <div class="panel-head">
+            <div>
+              <h3>Threshold Rule Alert Events</h3>
+              <span class="sub-caption">Real-time condition breaches</span>
+            </div>
+          </div>
+
+          <div class="alerts-scroll" id="alertsContainer">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

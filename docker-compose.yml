@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  sensorcloud-broker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sensorcloud_broker
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - SQLITE_DB_PATH=/app/data/sensorcloud.db
+    volumes:
+      - sensorcloud_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  sensorcloud_data:
+    driver: local

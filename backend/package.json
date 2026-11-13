@@ -1,0 +1,23 @@
+{
+  "name": "sensorcloud-iot",
+  "version": "1.0.0",
+  "description": "Industrial IoT Sensor Telemetry Dashboard & Real-Time Broker",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "iot",
+    "telemetry",
+    "esp32",
+    "sensor-cloud",
+    "stream-processing",
+    "industrial-iot"
+  ],
+  "author": "Alvin MS",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
